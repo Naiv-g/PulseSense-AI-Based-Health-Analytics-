@@ -66,27 +66,15 @@ def main():
             st.subheader("Navigation")
             if st.button("🏠 Dashboard", use_container_width=True):
                 st.session_state.current_page = "Dashboard"
-                st.rerun()
-            
-            if st.button("📋 Medical Records", use_container_width=True):
-                st.session_state.current_page = "Medical Records"
-                st.rerun()
-            
-            if st.button("🔍 Symptom Checker", use_container_width=True):
-                st.session_state.current_page = "Symptom Checker"
-                st.rerun()
-            
-            if st.button("👤 Profile", use_container_width=True):
-                st.session_state.current_page = "Profile"
-                st.rerun()
-            
+                st.experimental_rerun()
+
             st.divider()
-            
+
             if st.button("🚪 Logout", use_container_width=True):
                 st.session_state.token = None
                 st.session_state.user = None
                 st.session_state.current_page = "Dashboard"
-                st.rerun()
+                st.experimental_rerun()
     else:
         st.session_state.current_page = "Login"
     
@@ -120,7 +108,7 @@ def show_login_page():
                     if login_user(username, password):
                         st.success("Login successful!")
                         st.session_state.current_page = "Dashboard"
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("Invalid credentials")
         
@@ -189,10 +177,10 @@ def show_dashboard():
         st.info("⚡ Quick Actions")
         if st.button("➕ Add Medical Record", use_container_width=True):
             st.session_state.current_page = "Medical Records"
-            st.rerun()
+            st.experimental_rerun()
         if st.button("🔍 Check Symptoms", use_container_width=True):
             st.session_state.current_page = "Symptom Checker"
-            st.rerun()
+            st.experimental_rerun()
     
     # Recent medical records
     st.subheader("Recent Medical Records")
@@ -209,29 +197,35 @@ def show_dashboard():
 
 def show_medical_records():
     st.subheader("Medical Records Management")
-    
+
+    # Initialize session state for submission
+    if 'submitting_record' not in st.session_state:
+        st.session_state.submitting_record = False
+
     # Add new record form
     with st.form("add_medical_record"):
         col1, col2 = st.columns(2)
-        
+
         with col1:
             record_type = st.selectbox("Record Type*", [
-                "Diagnosis", "Treatment", "Surgery", "Medication", 
+                "Diagnosis", "Treatment", "Surgery", "Medication",
                 "Allergy", "Chronic Condition", "Other"
             ])
             record_date = st.date_input("Record Date*")
-        
+
         with col2:
             diagnosis = st.text_input("Diagnosis (if any)")
             treatment = st.text_area("Treatment Details (if any)")
-        
+
         description = st.text_area("Description*")
-        
-        submitted = st.form_submit_button("Add Medical Record")
-        
+
+        submitted = st.form_submit_button("Add Medical Record", disabled=st.session_state.submitting_record)
+
         if submitted:
+            st.session_state.submitting_record = True
             if not description:
                 st.error("Description is required")
+                st.session_state.submitting_record = False
             else:
                 if add_medical_record({
                     "record_type": record_type,
@@ -241,9 +235,11 @@ def show_medical_records():
                     "record_date": record_date.isoformat()
                 }):
                     st.success("Medical record added successfully!")
-                    st.rerun()
+                    st.session_state.submitting_record = False
+                    st.experimental_rerun()
                 else:
                     st.error("Failed to add medical record")
+                    st.session_state.submitting_record = False
     
     # Display existing records
     st.subheader("Your Medical Records")
@@ -269,13 +265,6 @@ def show_medical_records():
 
 def show_symptom_checker():
     st.subheader("AI Symptom Checker")
-    st.markdown("""
-    <div class="info-box">
-    <strong>Disclaimer:</strong> This tool provides preliminary health information based on AI analysis. 
-    It is not a substitute for professional medical advice, diagnosis, or treatment. 
-    Always consult a healthcare professional for serious symptoms or emergencies.
-    </div>
-    """, unsafe_allow_html=True)
     
     # Get available symptoms
     symptoms = get_available_symptoms()
@@ -287,39 +276,40 @@ def show_symptom_checker():
             help="Choose all symptoms you're currently experiencing"
         )
         
-        if st.button("Analyze Symptoms") and selected_symptoms:
-            with st.spinner("Analyzing symptoms with AI..."):
-                prediction = predict_disease_from_symptoms(selected_symptoms)
-                
-                if prediction:
-                    st.markdown("### Analysis Results")
+        if st.button("Analyze Symptoms", key="analyze_symptoms"):
+            if selected_symptoms:
+                with st.spinner("Analyzing symptoms with AI..."):
+                    prediction = predict_disease_from_symptoms(selected_symptoms)
                     
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.metric("Possible Condition", prediction['disease'])
-                        st.metric("Confidence Level", f"{prediction['confidence']:.1%}")
-                    
-                    with col2:
-                        st.write(f"**Recommended Specialist:** {prediction['recommended_specialist']}")
-                        st.write(f"**Description:** {prediction['description']}")
-                    
-                    st.subheader("Suggested Diagnostic Tests")
-                    for test in prediction['suggested_tests']:
-                        st.write(f"• {test}")
-                    
-                    st.subheader("Precautions & Recommendations")
-                    for precaution in prediction['precautions']:
-                        st.write(f"• {precaution}")
-                    
-                    # Emergency warning for serious symptoms
-                    serious_symptoms = {'chest pain', 'shortness of breath', 'severe headache', 'uncontrolled bleeding'}
-                    if any(symptom.lower() in serious_symptoms for symptom in selected_symptoms):
-                        st.error("🚨 **Seek immediate medical attention for these symptoms!**")
-                else:
-                    st.error("Failed to get prediction. Please try again.")
-        elif st.button("Analyze Symptoms") and not selected_symptoms:
-            st.warning("Please select at least one symptom.")
+                    if prediction:
+                        st.markdown("### Analysis Results")
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.metric("Possible Condition", prediction['disease'])
+                            st.metric("Confidence Level", f"{prediction['confidence']:.1%}")
+                        
+                        with col2:
+                            st.write(f"**Recommended Specialist:** {prediction['recommended_specialist']}")
+                            st.write(f"**Description:** {prediction['description']}")
+                        
+                        st.subheader("Suggested Diagnostic Tests")
+                        for test in prediction['suggested_tests']:
+                            st.write(f"• {test}")
+                        
+                        st.subheader("Precautions & Recommendations")
+                        for precaution in prediction['precautions']:
+                            st.write(f"• {precaution}")
+                        
+                        # Emergency warning for serious symptoms
+                        serious_symptoms = {'chest pain', 'shortness of breath', 'severe headache', 'uncontrolled bleeding'}
+                        if any(symptom.lower() in serious_symptoms for symptom in selected_symptoms):
+                            st.error("🚨 **Seek immediate medical attention for these symptoms!**")
+                    else:
+                        st.error("Failed to get prediction. Please try again.")
+            else:
+                st.warning("Please select at least one symptom.")
     else:
         st.error("Could not load symptoms list. Please try again later.")
 

@@ -23,13 +23,12 @@ class HealthcareRAGAgent:
     def setup_llm(self):
         """Initialize a simpler LLM for medical queries"""
         try:
-            # Use a smaller, faster model for medical text
+            
             print("Loading medical LLM...")
             
-            # Try using a smaller model first
+            
             model_name = "microsoft/BioGPT-Large"
             
-            # Fallback to even smaller model if needed
             try:
                 tokenizer = AutoTokenizer.from_pretrained("microsoft/BioGPT-Large")
                 model = AutoModelForCausalLM.from_pretrained(
