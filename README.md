@@ -1,4 +1,4 @@
-# PulseSense – AI-Powered Health Analytics
+# PulseSense – AI-Powered Health Diagnostics
 
 AI-assisted health companion that combines a FastAPI backend, MySQL persistence, and a Streamlit frontend. PulseSense lets users register, log in, manage medical records, run symptom checks powered by a lightweight RAG pipeline, and chat with a health-focused assistant. The backend initializes seed medical data on startup and exposes JWT-protected APIs; the frontend provides a polished multi-page experience.
 
