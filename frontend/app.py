@@ -566,6 +566,11 @@ def show_symptom_checker():
                             </div>
                             """, unsafe_allow_html=True)
                             
+                            # Show input symptoms
+                            st.markdown("### 🔍 Your Symptoms")
+                            symptom_display = " ".join([f'<span class="symptom-tag">{symptom}</span>' for symptom in selected_symptoms])
+                            st.markdown(f'<div style="margin: 1rem 0;">{symptom_display}</div>', unsafe_allow_html=True)
+                            
                             col1, col2 = st.columns(2)
                             
                             with col1:
@@ -585,6 +590,20 @@ def show_symptom_checker():
                                 """, unsafe_allow_html=True)
                                 for precaution in prediction['precautions']:
                                     st.markdown(f"📌 {precaution}")
+                            
+                            # Help needed section
+                            st.markdown("### 🆘 Help & Next Steps")
+                            st.markdown("""
+                            <div class="info-card">
+                                <h4 style="margin-top: 0; color: #667eea;">What to do next:</h4>
+                                <ul style="color: #374151; line-height: 1.8;">
+                                    <li><strong>Consult a healthcare professional:</strong> This analysis is for informational purposes only and should not replace professional medical advice.</li>
+                                    <li><strong>Monitor your symptoms:</strong> Keep track of any changes or worsening of symptoms.</li>
+                                    <li><strong>Seek immediate care if:</strong> Symptoms worsen, you experience severe pain, difficulty breathing, or other emergency symptoms.</li>
+                                    <li><strong>Prepare for your appointment:</strong> Bring a list of your symptoms, medications, and any relevant medical history.</li>
+                                </ul>
+                            </div>
+                            """, unsafe_allow_html=True)
                         else:
                             st.error("❌ Failed to get prediction. Please try again.")
             else:
